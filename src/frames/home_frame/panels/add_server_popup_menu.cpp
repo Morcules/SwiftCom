@@ -3,6 +3,7 @@
 #include "../../../utils/crypto/crypto.hpp"
 #include "../../../utils/net/net.hpp"
 #include "swift_net.h"
+#include "../../../objects/objects.hpp"
 
 using namespace frames::home_frame::panels;
 
@@ -73,9 +74,17 @@ void ServersPanel::AddServerPopupMenu::RequestServerExistsConfirmation(const cha
 
     switch (server_exists) {
         case EXISTS:
+        {
             wxGetApp().GetDatabase()->InsertJoinedServer(server_id, parsed_ip_address);
 
+            ServersPanel* const servers_panel = wxGetApp().GetHomeFrame()->GetServersPanel();
+
+            servers_panel->GetJoinedServers()->push_back(objects::JoinedServer(server_id, parsed_ip_address));
+            
+            servers_panel->DrawServers();
+
             break;
+        }
         case FAILED_STATUS:
             break;
         case NO_RESPONSE:

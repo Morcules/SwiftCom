@@ -12,7 +12,7 @@
 #include "../../main.hpp"
 #include "../../utils/net/net.hpp"
 
-using namespace frames;
+using frames::ChatRoomFrame;
 
 ChatRoomFrame::ChatRoomFrame(const in_addr ip_address, const uint16_t server_id) : wxFrame(wxGetApp().GetHomeFrame(), wxID_ANY, "Chat Room", wxDefaultPosition, wxSize(800, 600)), server_id(server_id), server_ip_address(ip_address)  {
     wxPanel* main_panel = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_SIMPLE);
@@ -43,7 +43,14 @@ ChatRoomFrame::ChatRoomFrame(const in_addr ip_address, const uint16_t server_id)
 }
 
 ChatRoomFrame::~ChatRoomFrame() {
+    auto const chat_room_frames = wxGetApp().GetChatRoomFrames();
 
+    for(uint32_t i = 0; i < chat_room_frames->size(); i++) {
+        if (this == chat_room_frames->at(i)) {
+            chat_room_frames->erase(chat_room_frames->begin() + i);
+            break;
+        }
+    }
 }
 
 void ChatRoomFrame::DrawChannels() {

@@ -29,6 +29,15 @@ namespace frames {
         wxTimer timer;
     };
 
+    class ServerSettingsFrame : public wxFrame {
+    public:
+        ServerSettingsFrame(const uint16_t server_id, const in_addr_t ip_address);
+        ~ServerSettingsFrame();
+    private:
+        uint16_t server_id;
+        in_addr_t ip_address;
+    };
+
     class ChatRoomFrame : public wxFrame {
     public:
         class ChatChannel {

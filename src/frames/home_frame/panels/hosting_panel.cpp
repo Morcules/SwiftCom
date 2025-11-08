@@ -29,7 +29,11 @@ HostingPanel::HostingPanel(wxPanel* parent_panel) : wxPanel(parent_panel) {
     wxBoxSizer* manage_all_servers_sizer = new wxBoxSizer(wxHORIZONTAL);
 
     widgets::Button* start_all_servers_button = new widgets::Button(this, "Start All", [this](wxMouseEvent& event) {
-        for (auto &server : *wxGetApp().GetHomeFrame()->GetHostingPanel()->GetHostedServers()) {
+        for (auto &server : *this->GetHostedServers()) {
+            if (server.GetServerStatus() != objects::STOPPED) {
+                continue;
+            }
+
             server.StartServer();
         }
     });
@@ -39,6 +43,10 @@ HostingPanel::HostingPanel(wxPanel* parent_panel) : wxPanel(parent_panel) {
 
     widgets::Button* stop_all_servers_button = new widgets::Button(this, "Stop All", [this](wxMouseEvent& event) {
         for (auto &server : *wxGetApp().GetHomeFrame()->GetHostingPanel()->GetHostedServers()) {
+            if (server.GetServerStatus() != objects::RUNNING) {
+                continue;
+            }
+
             server.StopServer();
         }
     });
@@ -101,7 +109,15 @@ void HostingPanel::DrawServers() {
         server_panel->SetMinSize(wxSize(-1, 30));
         server_panel->SetMaxSize(wxSize(-1, 30));
 
-        widgets::Button* start_server_button = new widgets::Button(server_panel, server.GetServerStatus() == objects::RUNNING ? "Stop Server" : "Start Server", [this, &server](wxMouseEvent& event){ server.GetServerStatus() == objects::RUNNING ? server.StopServer() : server.StartServer(); });
+        widgets::Button* settings_server_button = new widgets::Button(server_panel, "Settings", [this, &server, server_id, public_ip_address](wxMouseEvent& event){ 
+            auto server_settings_frame = new frames::ServerSettingsFrame(server_id, public_ip_address.s_addr);
+
+            server_settings_frame->Show(true);
+        });
+        settings_server_button->SetMinSize(wxSize(-1, 30));
+        settings_server_button->SetMaxSize(wxSize(-1, 30));
+
+        widgets::Button* start_server_button = new widgets::Button(server_panel, server.GetServerStatus() == objects::RUNNING ? "Stop" : "Start", [this, &server](wxMouseEvent& event){ server.GetServerStatus() == objects::RUNNING ? server.StopServer() : server.StartServer(); });
         start_server_button->SetMinSize(wxSize(-1, 30));
         start_server_button->SetMaxSize(wxSize(-1, 30));
 
@@ -111,6 +127,7 @@ void HostingPanel::DrawServers() {
 
         button_sizer->Add(button_invitation_code_text, 4, wxALIGN_CENTER_VERTICAL | wxLEFT, 10);
         button_sizer->AddStretchSpacer(1);
+        button_sizer->Add(settings_server_button, 4, wxALIGN_CENTER_VERTICAL);
         button_sizer->Add(start_server_button, 4, wxALIGN_CENTER_VERTICAL);
 
         server_panel->SetSizer(button_sizer);

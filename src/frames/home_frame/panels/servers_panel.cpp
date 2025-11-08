@@ -60,7 +60,7 @@ void ServersPanel::DrawServers() {
 
     this->joined_servers_panel->SetSizer(v_sizer);
 
-    for (auto &server : *wxGetApp().GetHomeFrame()->GetServersPanel()->GetJoinedServers()) {
+    for (auto &server : *this->GetJoinedServers()) {
         uint16_t server_id = server.GetServerId();
         in_addr server_ip_address = server.GetServerIpAddress();
 

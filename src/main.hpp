@@ -65,6 +65,7 @@ public:
     objects::Database* GetDatabase();
     frames::HomeFrame* GetHomeFrame();
     std::vector<frames::ChatRoomFrame*>* GetChatRoomFrames();
+    std::vector<frames::ServerSettingsFrame*>* GetServerSettingsFrames();
     frames::ChatRoomFrame* GetChatRoomFrameById(const uint16_t server_id);
 private:
     frames::HomeFrame* home_frame;
@@ -72,6 +73,7 @@ private:
     objects::Database* database;
 
     std::vector<frames::ChatRoomFrame*> chat_room_frames;
+    std::vector<frames::ServerSettingsFrame*> server_settings_frames;
 };
 
 wxDECLARE_APP(Application);

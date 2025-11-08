@@ -59,6 +59,10 @@ std::vector<frames::ChatRoomFrame*>* Application::GetChatRoomFrames() {
     return &this->chat_room_frames;
 }
 
+std::vector<frames::ServerSettingsFrame*>* Application::GetServerSettingsFrames() {
+    return &this->server_settings_frames;
+}
+
 frames::HomeFrame* Application::GetHomeFrame() {
     return this->home_frame;
 }

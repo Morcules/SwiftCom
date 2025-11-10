@@ -3,10 +3,9 @@
 #include <cstdint>
 #include <vector>
 #include <wx/wx.h>
-#include "frames/frames.hpp"
-#include "objects/objects.hpp"
 #include <sqlite3.h>
 #include "objects/objects.hpp"
+#include "frames/frames.hpp"
 
 #define DEFAULT_TIMEOUT_CLIENT_CREATION 5000
 #define DEFAULT_TIMEOUT_REQUEST 5000

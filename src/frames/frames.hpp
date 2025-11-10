@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <netinet/in.h>
 #include <wx/event.h>
 #include <wx/panel.h>
 #include <wx/wx.h>
@@ -35,12 +36,17 @@ namespace frames {
     public:
         class AdminListPanel : public wxPanel {
         public:
-            AdminListPanel(wxPanel* parent, const uint16_t server_id);
+            AdminListPanel(wxPanel* parent, const uint16_t server_idip_address);
             ~AdminListPanel();
 
-            void RenderUserList();
+            void RenderAdminList();
+            void RenderMemberList();
         private:
-            wxPanel* user_list_panel;
+            void MakeUserAdmin(const char* username);
+            void RemoveUserAdmin(const char* username);
+
+            wxPanel* admin_list_panel;
+            wxPanel* member_list_panel;
 
             uint16_t server_id;
         };

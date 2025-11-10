@@ -60,6 +60,11 @@ namespace objects {
 
     class Database {
     public:
+        enum UserType {
+            Member,
+            Admin
+        };
+
         typedef struct {
             uint16_t server_id;
         } HostedServerRow;
@@ -104,6 +109,7 @@ namespace objects {
         std::vector<ServerChatChannelRow>* SelectServerChatChannels(const uint16_t server_id);
         std::vector<ChannelMessageRow>* SelectChannelMessages(const uint32_t channel_id);
         std::vector<HostedServerUser>* SelectHostedServerUsers(const uint16_t server_id);
+        std::vector<HostedServerUser>* SelectHostedServerUsersByUserType(const uint16_t server_id, const UserType user_type);
 
         uint32_t SelectUserId(const in_addr_t ip_address, const uint32_t server_id);
 
@@ -112,6 +118,8 @@ namespace objects {
         int InsertJoinedServer(const uint16_t server_id, in_addr ip_address);
         int InsertServerChatChannel(const char* name, const uint16_t server_id);
         int InsertChannelMessage(const char* message, const uint32_t channel_id, const uint32_t sender_id);
+
+        int UpdateUserTypeByUsername(const char* username, const uint16_t server_id, const UserType user_type);
 
         sqlite3_stmt* GetStatement(const char* statement_name);
 

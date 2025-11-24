@@ -44,7 +44,16 @@ ServersPanel::ServersPanel(wxPanel* parent_panel) : wxPanel(parent_panel) {
     auto stored_joined_servers = this->GetJoinedServers();
 
     for (auto &server : *joined_servers) {
-        stored_joined_servers->push_back(objects::JoinedServer(server.server_id, server.ip_address));
+
+
+        SwiftNetClientConnection* client = swiftnet_create_client(inet_ntoa(server.ip_address), server.server_id, DEFAULT_TIMEOUT_CLIENT_CREATION);
+        if (client == nullptr) {
+            stored_joined_servers->push_back(objects::JoinedServer(server.server_id, server.ip_address, objects::JoinedServer::ServerStatus::OFFLINE));
+
+            continue;
+        }
+
+        stored_joined_servers->push_back(objects::JoinedServer(server.server_id, server.ip_address, objects::JoinedServer::ServerStatus::ONLINE));
     }
 
     free(joined_servers);
@@ -74,13 +83,7 @@ void ServersPanel::DrawServers() {
         widgets::Button* start_server_button = new widgets::Button(server_panel, "Enter Server", [this, &server](wxMouseEvent& event){
             frames::ChatRoomFrame* chat_room_frame = nullptr;
 
-            char buf[100];
-
             in_addr ip = server.GetServerIpAddress();
-
-            inet_aton(buf, &ip);
-
-            printf("server ip: %s\n", buf);
 
             if (server.GetServerIpAddress().s_addr == utils::net::get_public_ip().s_addr) {
                 chat_room_frame = new frames::ChatRoomFrame(utils::net::get_private_ip(), server.GetServerId());

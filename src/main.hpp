@@ -1,62 +1,78 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
 #include <wx/wx.h>
 #include <sqlite3.h>
 #include "objects/objects.hpp"
 #include "frames/frames.hpp"
+#include <swift_net.h>
 
 #define DEFAULT_TIMEOUT_CLIENT_CREATION 5000
 #define DEFAULT_TIMEOUT_REQUEST 5000
+#define LOOPBACK false 
 
 // Request Types
 
-typedef enum {
+enum Status {
     SUCCESS,
     FAIL
-} RequestStatus;
+};
 
-typedef enum {
+enum RequestType {
     JOIN_SERVER,
     LOAD_SERVER_INFORMATION,
     LOAD_CHANNEL_DATA,
     SEND_MESSAGE
-} RequestType;
+};
 
-typedef struct {
-    RequestType request_type;
-} RequestInfo;
+struct RequestInfo {
+    enum RequestType request_type;
+};
+
+struct ResponseInfo {
+    enum RequestType request_type;
+    enum Status request_status;
+};
 
 // Requests
-typedef struct {
-    uint32_t channel_id;
-} LoadChannelDataRequest;
 
-typedef struct {
-    uint32_t message_len;
-    uint32_t channel_id;
-} SendMessageRequest;
+namespace requests {
+    struct LoadChannelDataRequest {
+        uint32_t channel_id;
+    };
 
-typedef struct {
-    char username[20];
-} JoinServerRequest;
+    struct SendMessageRequest {
+        uint32_t message_len;
+        uint32_t channel_id;
+    };
+
+    struct JoinServerRequest {
+        char username[20];
+    };
+
+    struct LoadJoinedServerDataRequest {
+
+    };
+}
 
 // Responses
-typedef struct {
-    RequestStatus status;
-} JoinServerResponse;
 
-typedef struct {
-    RequestStatus status;
-    uint32_t server_chat_channels_size;
-    objects::Database::ServerChatChannelRow server_chat_channels[];
-} LoadServerInformationResponse;
+namespace responses {
+    struct JoinServerResponse {
+    };
 
-typedef struct {
-    RequestStatus status;
-    uint32_t channel_messages_len;
-} LoadChannelDataResponse;
+    struct LoadServerInformationResponse {
+        uint32_t server_chat_channels_size;
+    };
+
+    struct LoadChannelDataResponse {
+        uint32_t channel_messages_len;
+    };
+
+    struct LoadJoinedServerDataResponse {
+        bool admin;
+    };
+}
 
 class Application : public wxApp
 {

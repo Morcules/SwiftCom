@@ -20,7 +20,7 @@ std::string utils::file_system::get_application_directory() {
     std::cout << "Location: " << result << std::endl;
 
     return result;
-#endif
-
+#else
     return "";
+#endif
 }

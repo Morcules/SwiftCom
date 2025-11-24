@@ -33,8 +33,6 @@ HomeFrame::HomeFrame() : wxFrame(nullptr, wxID_ANY, "Home Frame", wxDefaultPosit
 }
 
 HomeFrame::~HomeFrame() {
-    delete this->menu_bar;
-    delete this->hosting_panel;
 }
 
 void HomeFrame::SelectedMenuChange() {

@@ -8,11 +8,11 @@
 #include <wx/panel.h>
 #include <wx/sizer.h>
 #include "../../main.hpp"
-#include "swift_net.h"
+#include <swift_net.h>
 
-using frames::ServerSettingsFrame;
+using AdminListPanel = frames::ServerSettingsFrame::AdminListPanel;
 
-ServerSettingsFrame::AdminListPanel::AdminListPanel(wxPanel* parent, const uint16_t server_id) : wxPanel(parent), server_id(server_id) {
+AdminListPanel::AdminListPanel(wxPanel* parent, const uint16_t server_id) : wxPanel(parent), server_id(server_id) {
     wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
     this->member_list_panel = new wxPanel(this);
@@ -32,11 +32,11 @@ ServerSettingsFrame::AdminListPanel::AdminListPanel(wxPanel* parent, const uint1
     this->RenderAdminList();
 }
 
-ServerSettingsFrame::AdminListPanel::~AdminListPanel() {
+AdminListPanel::~AdminListPanel() {
 
 }
 
-void ServerSettingsFrame::AdminListPanel::RenderAdminList() {
+void AdminListPanel::RenderAdminList() {
     this->admin_list_panel->DestroyChildren();
 
     auto list_sizer = this->admin_list_panel->GetSizer();
@@ -73,7 +73,7 @@ void ServerSettingsFrame::AdminListPanel::RenderAdminList() {
     delete users;
 }
 
-void ServerSettingsFrame::AdminListPanel::RenderMemberList() {
+void AdminListPanel::RenderMemberList() {
     this->member_list_panel->DestroyChildren();
 
     auto list_sizer = this->member_list_panel->GetSizer();
@@ -110,14 +110,14 @@ void ServerSettingsFrame::AdminListPanel::RenderMemberList() {
     delete users;
 }
 
-void ServerSettingsFrame::AdminListPanel::MakeUserAdmin(const char* username) {
+void AdminListPanel::MakeUserAdmin(const char* username) {
     wxGetApp().GetDatabase()->UpdateUserTypeByUsername(username, this->server_id, objects::Database::UserType::Admin);
 
     this->RenderMemberList();
     this->RenderAdminList();
 }
 
-void ServerSettingsFrame::AdminListPanel::RemoveUserAdmin(const char* username) {
+void AdminListPanel::RemoveUserAdmin(const char* username) {
     wxGetApp().GetDatabase()->UpdateUserTypeByUsername(username, this->server_id, objects::Database::UserType::Member);
 
     this->RenderMemberList();

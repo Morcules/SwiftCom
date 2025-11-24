@@ -3,7 +3,6 @@
 #include <sqlite3.h>
 #include <arpa/inet.h>
 #include <cstdint>
-#include <fstream>
 #include <netinet/in.h>
 #include <unordered_map>
 #include <vector>
@@ -49,11 +48,18 @@ namespace objects {
 
     class JoinedServer {
     public:
-        JoinedServer(uint16_t server_id, in_addr server_ip_address);
+        enum ServerStatus {
+            OFFLINE,
+            ONLINE
+        };
+
+        JoinedServer(const uint16_t server_id, const in_addr server_ip_address, const ServerStatus);
 
         uint16_t GetServerId();
         in_addr GetServerIpAddress();
+        ServerStatus GetServerStatus();
     private:
+        ServerStatus status;
         uint16_t server_id;
         in_addr server_ip_address;
     };

@@ -4,6 +4,7 @@
 #include <cstring>
 #include <functional>
 #include <string>
+#include <unistd.h>
 #include <vector>
 #include <wx/event.h>
 #include <wx/sizer.h>
@@ -92,7 +93,7 @@ void HostingPanel::DrawServers() {
 
     in_addr public_ip_address = utils::net::get_public_ip();
 
-    for (auto &server : *wxGetApp().GetHomeFrame()->GetHostingPanel()->GetHostedServers()) {
+    for (auto &server : *this->GetHostedServers()) {
         uint16_t server_id = server.GetServerId();
 
         std::vector<uint8_t> invitation_data;
@@ -137,13 +138,14 @@ void HostingPanel::DrawServers() {
 
     this->hosted_servers_panel->GetParent()->Layout();
     this->hosted_servers_panel->GetParent()->Refresh();
-    this->hosted_servers_panel->GetParent()->SendSizeEvent();
 }
 
 void HostingPanel::CreateNewServer(wxMouseEvent&) {
     uint16_t random_generated_id = rand();
 
     wxGetApp().GetDatabase()->InsertHostedServer(random_generated_id);
+
+    this->InsertHostedServer(random_generated_id);
 
     this->DrawServers();
 }

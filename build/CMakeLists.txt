@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
 # Minimum macOS version
-set(CMAKE_OSX_DEPLOYMENT_TARGET "15.2")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "26.0")
 
 # Frameworks needed on macOS
 set(MAC_FRAMEWORKS
@@ -30,7 +30,9 @@ file(GLOB_RECURSE SOURCES "../src/*.cpp")
 # Define the executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-find_package(swiftnet REQUIRED)
+target_link_libraries(main PRIVATE pcap)
+
+find_package(deadlightreal-swiftnet REQUIRED)
 target_link_libraries(main PRIVATE swiftnet::swiftnet)
 
 find_package(SQLite3 REQUIRED)

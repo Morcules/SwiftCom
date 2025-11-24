@@ -1,5 +1,5 @@
 #include "../frames.hpp"
-#include "swift_net.h"
+#include <swift_net.h>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -13,6 +13,10 @@
 #include "../../utils/net/net.hpp"
 
 using frames::ChatRoomFrame;
+
+static void packet_handler(SwiftNetClientPacketData* const packet_data) {
+
+}
 
 ChatRoomFrame::ChatRoomFrame(const in_addr ip_address, const uint16_t server_id) : wxFrame(wxGetApp().GetHomeFrame(), wxID_ANY, "Chat Room", wxDefaultPosition, wxSize(800, 600)), server_id(server_id), server_ip_address(ip_address)  {
     wxPanel* main_panel = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_SIMPLE);
@@ -37,6 +41,8 @@ ChatRoomFrame::ChatRoomFrame(const in_addr ip_address, const uint16_t server_id)
 
     this->client_connection = connection;
 
+    swiftnet_client_set_message_handler(connection, packet_handler);
+
     this->LoadServerInformation();
 }
 
@@ -49,6 +55,12 @@ ChatRoomFrame::~ChatRoomFrame() {
             break;
         }
     }
+
+    for (auto &chat_chanel : this->chat_channels) {
+        delete chat_chanel;
+    }
+
+    swiftnet_client_cleanup(this->client_connection);
 }
 
 void ChatRoomFrame::DrawChannels() {
@@ -79,26 +91,22 @@ void ChatRoomFrame::DrawChannels() {
     this->channel_list_panel->SendSizeEvent();
 }
 
-void ChatRoomFrame::HandleLoadServerInfoResponse(SwiftNetClientPacketData* packet_data) {
-    RequestInfo* request_info = (RequestInfo*)swiftnet_client_read_packet(packet_data, sizeof(RequestType));
-    if (request_info->request_type != LOAD_SERVER_INFORMATION) {
+void ChatRoomFrame::HandleLoadServerInfoResponse(SwiftNetClientPacketData* const packet_data) {
+    auto request_info = (ResponseInfo*)swiftnet_client_read_packet(packet_data, sizeof(ResponseInfo*));
+    auto request_data = (responses::LoadServerInformationResponse*)swiftnet_client_read_packet(packet_data, sizeof(responses::LoadServerInformationResponse));
+
+    if (request_info->request_type != RequestType::LOAD_SERVER_INFORMATION) {
         return;
     }
 
-    LoadServerInformationResponse* response = (LoadServerInformationResponse*)swiftnet_client_read_packet(packet_data, packet_data->metadata.data_length - sizeof(RequestType));
-
-    printf("loading\n");
-
-    if (response->status != SUCCESS) {
+    if (request_info->request_status != Status::SUCCESS) {
         return;
     }
 
-    printf("loading channels\n");
+    objects::Database::ServerChatChannelRow* rows = (objects::Database::ServerChatChannelRow*)swiftnet_client_read_packet(packet_data, sizeof(objects::Database::ServerChatChannelRow) * request_data->server_chat_channels_size);
 
-    for (uint32_t i = 0; i < response->server_chat_channels_size; i++) {
-        printf("loading channel\n");
-
-        auto channel = response->server_chat_channels[i];
+    for (uint32_t i = 0; i < request_data->server_chat_channels_size; i++) {
+        auto channel = rows[i];
 
         this->GetChatChannels()->push_back(new ChatChannel(channel.id, channel.name));
     }
@@ -129,6 +137,8 @@ void ChatRoomFrame::LoadServerInformation() {
     this->HandleLoadServerInfoResponse(packet_data);
 
     swiftnet_client_destroy_packet_buffer(&buffer);
+
+    swiftnet_client_destroy_packet_data(packet_data, connection);
 }
 
 ChatRoomFrame::ChatPanel* ChatRoomFrame::GetChatPanel() {

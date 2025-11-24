@@ -2,7 +2,7 @@
 #include "../../../main.hpp"
 #include "../../../utils/crypto/crypto.hpp"
 #include "../../../utils/net/net.hpp"
-#include "swift_net.h"
+#include <swift_net.h>
 #include "../../../objects/objects.hpp"
 
 using AddServerPopupMenu = frames::home_frame::panels::ServersPanel::AddServerPopupMenu;
@@ -35,6 +35,10 @@ AddServerPopupMenu::~AddServerPopupMenu() {
 
 }
 
+static void packet_handler(SwiftNetClientPacketData* const packet_data) {
+    printf("Received packet\n");
+}
+
 enum AddServerPopupMenu::RequestServerExistationStatus AddServerPopupMenu::RequestServerExistsConfirmation(const char* ip_address, const uint16_t server_id, const in_addr address) {
     SwiftNetClientConnection* client = nullptr;
 
@@ -48,32 +52,39 @@ enum AddServerPopupMenu::RequestServerExistationStatus AddServerPopupMenu::Reque
         return AddServerPopupMenu::RequestServerExistationStatus::NO_RESPONSE;
     }
 
-    const RequestInfo request_info = {.request_type = JOIN_SERVER};
+    swiftnet_client_set_message_handler(client, packet_handler);
 
-    const JoinServerRequest request = {
+    const RequestInfo request_info = {.request_type = RequestType::JOIN_SERVER};
+
+    const requests::JoinServerRequest request_data = {
+        .username = "deadlight\0"
     };
 
-    SwiftNetPacketBuffer buffer = swiftnet_client_create_packet_buffer(sizeof(request_info) + sizeof(request));
-    
-    swiftnet_client_append_to_packet(&request_info, sizeof(request_info), &buffer);
-    swiftnet_client_append_to_packet(&request, sizeof(request), &buffer);
+    auto buffer = swiftnet_client_create_packet_buffer(sizeof(request_info) + sizeof(request_data));
 
-    SwiftNetClientPacketData* const packet_data = swiftnet_client_make_request(client, &buffer, DEFAULT_TIMEOUT_REQUEST);
-    if (packet_data == nullptr) {
+    swiftnet_client_append_to_packet(&request_info, sizeof(request_info), &buffer);
+    swiftnet_client_append_to_packet(&request_data, sizeof(request_data), &buffer);
+
+    SwiftNetClientPacketData* response = swiftnet_client_make_request(client, &buffer, DEFAULT_TIMEOUT_REQUEST);
+    if (response == nullptr) {
+        swiftnet_client_destroy_packet_buffer(&buffer);
+
         return AddServerPopupMenu::RequestServerExistationStatus::NO_RESPONSE;
     }
 
-    const RequestInfo* const request_info_received = (RequestInfo*)swiftnet_client_read_packet(packet_data, sizeof(RequestInfo));
-    if (request_info_received->request_type != RequestType::JOIN_SERVER) {
+    swiftnet_client_destroy_packet_buffer(&buffer);
+
+    auto response_info_received = (ResponseInfo*)swiftnet_client_read_packet(response, sizeof(ResponseInfo));
+    auto response_data_received = (responses::JoinServerResponse*)swiftnet_client_read_packet(response, sizeof(responses::JoinServerResponse));
+
+    if (response_info_received->request_type != RequestType::JOIN_SERVER) {
         return AddServerPopupMenu::RequestServerExistationStatus::UNKNOWN_RESPONSE;
     }
-    
-    const JoinServerResponse* const response = (JoinServerResponse*)swiftnet_client_read_packet(packet_data, sizeof(JoinServerResponse));
 
     in_addr parsed_ip_address;
     inet_pton(AF_INET, ip_address, &parsed_ip_address);
 
-    if(response->status == RequestStatus::SUCCESS) {
+    if(response_info_received->request_status == Status::SUCCESS) {
         wxGetApp().GetDatabase()->InsertJoinedServer(server_id, parsed_ip_address);
 
         ServersPanel* const servers_panel = wxGetApp().GetHomeFrame()->GetServersPanel();
@@ -82,9 +93,10 @@ enum AddServerPopupMenu::RequestServerExistationStatus AddServerPopupMenu::Reque
         
         servers_panel->DrawServers();
     } else {
+        // Handle err
     }
 
-    swiftnet_client_destroy_packet_buffer(&buffer);
+    swiftnet_client_destroy_packet_data(response, client);
 
     swiftnet_client_cleanup(client);
 

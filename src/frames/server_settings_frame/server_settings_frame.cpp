@@ -30,6 +30,17 @@ ServerSettingsFrame::ServerSettingsFrame(const uint16_t server_id, const in_addr
     main_panel->SetSizer(main_sizer);
 }
 
+ServerSettingsFrame::~ServerSettingsFrame() {
+    auto const server_settings_frames = wxGetApp().GetServerSettingsFrames();
+    for (uint32_t i = 0; i < server_settings_frames->size(); i++) {
+        if (server_settings_frames->at(i) == this) {
+            server_settings_frames->erase(server_settings_frames->begin() + i);
+
+            break;
+        }
+    }
+}
+
 void ServerSettingsFrame::SelectedMenuChange() {
     if (this->active_menu != nullptr) {
         this->active_menu->Hide();
@@ -45,15 +56,4 @@ void ServerSettingsFrame::SelectedMenuChange() {
 
     Refresh();
     Layout();
-}
-
-ServerSettingsFrame::~ServerSettingsFrame() {
-    auto const server_settings_frames = wxGetApp().GetServerSettingsFrames();
-    for (uint32_t i = 0; i < server_settings_frames->size(); i++) {
-        if (server_settings_frames->at(i) == this) {
-            server_settings_frames->erase(server_settings_frames->begin() + i);
-
-            break;
-        }
-    }
 }

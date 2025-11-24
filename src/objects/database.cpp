@@ -20,7 +20,11 @@ Database::Database() {
 }
 
 Database::~Database() {
+    for (const auto &statement : this->statements) {
+        sqlite3_finalize(statement.second);
+    }
 
+    sqlite3_close_v2(this->database_connection);
 }
 
 void Database::OpenDatabase() {
@@ -42,7 +46,7 @@ void Database::PrepareStatements() {
         (Statement){.statement_name = "insert_hosted_server", .query = "INSERT INTO hosted_servers (id) VALUES ($1);"},
         (Statement){.statement_name = "insert_server_chat_channel", .query = "INSERT INTO server_chat_channels (name, hosted_server_id) VALUES ($1, $2);"},
         (Statement){.statement_name = "insert_channel_message", .query = "INSERT INTO channel_messages (message, channel_id, sender_id) VALUES ($1, $2, $3);"},
-        (Statement){.statement_name = "change_user_type_by_username", .query = "UPDATE hosted_server_users SET user_type = $1 WHERE server_id = $2 AND username = $3;"},
+        (Statement){.statement_name = "update_user_type_by_username", .query = "UPDATE hosted_server_users SET user_type = $1 WHERE server_id = $2 AND username = $3;"},
         (Statement){.statement_name = "select_hosted_servers", .query = "SELECT id FROM hosted_servers;"},
         (Statement){.statement_name = "select_joined_servers", .query = "SELECT ip_address, server_id FROM joined_servers;"},
         (Statement){.statement_name = "select_user_id", .query = "SELECT id FROM hosted_server_users WHERE ip_address = $1 AND server_id = $2;"},
@@ -92,7 +96,7 @@ int Database::InsertHostedServerUser(const uint16_t server_id, in_addr ip_addres
 
     int result = sqlite3_step(stmt);
     if (result != SQLITE_DONE) {
-        std::cerr << "Failed to insert hosted_server" << std::endl;
+        std::cerr << "Failed to insert hosted_server_user" << std::endl;
         return -1;
     }
 
@@ -170,7 +174,7 @@ int Database::InsertHostedServer(const uint16_t server_id) {
 }
 
 int Database::UpdateUserTypeByUsername(const char* username, const uint16_t server_id, const UserType user_type) {
-    sqlite3_stmt* stmt = this->GetStatement("change_user_type_by_username");
+    sqlite3_stmt* stmt = this->GetStatement("update_user_type_by_username");
 
     sqlite3_bind_int(stmt, 1, user_type);
     sqlite3_bind_int(stmt, 2, server_id);

@@ -44,14 +44,14 @@ ServersPanel::ServersPanel(wxPanel* parent_panel) : wxPanel(parent_panel) {
     auto stored_joined_servers = this->GetJoinedServers();
 
     for (auto &server : *joined_servers) {
-
-
-        SwiftNetClientConnection* client = swiftnet_create_client(inet_ntoa(server.ip_address), server.server_id, DEFAULT_TIMEOUT_CLIENT_CREATION);
+        SwiftNetClientConnection* const client = swiftnet_create_client(inet_ntoa(server.ip_address), server.server_id, DEFAULT_TIMEOUT_CLIENT_CREATION);
         if (client == nullptr) {
             stored_joined_servers->push_back(objects::JoinedServer(server.server_id, server.ip_address, objects::JoinedServer::ServerStatus::OFFLINE));
 
             continue;
         }
+
+        swiftnet_client_cleanup(client);
 
         stored_joined_servers->push_back(objects::JoinedServer(server.server_id, server.ip_address, objects::JoinedServer::ServerStatus::ONLINE));
     }

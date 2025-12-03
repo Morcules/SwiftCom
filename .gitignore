@@ -1,10 +1,10 @@
 .DS_Store
 
-/build/*
+/build/**/*
 !/build/compile.sh
 !/build/CMakeLists.txt
-.cache/*
-/src/.cache/*
+.cache/**/*
+/src/.cache/**/*
 
 *.o
 *.dSYM/

@@ -89,7 +89,7 @@ enum AddServerPopupMenu::RequestServerExistationStatus AddServerPopupMenu::Reque
 
         ServersPanel* const servers_panel = wxGetApp().GetHomeFrame()->GetServersPanel();
 
-        servers_panel->GetJoinedServers()->push_back(objects::JoinedServer(server_id, parsed_ip_address));
+        servers_panel->GetJoinedServers()->push_back(objects::JoinedServer(server_id, parsed_ip_address, objects::JoinedServer::ServerStatus::ONLINE));
         
         servers_panel->DrawServers();
     } else {

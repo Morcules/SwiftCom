@@ -44,8 +44,21 @@ static std::vector<objects::Database::ChannelMessageRow>* DeserializeChannelMess
     return result;
 }
 
+static void packet_handler(struct SwiftNetClientPacketData* const packet_data, void* const chat_panel_void) {
+    ChatPanel* const chat_panel = static_cast<ChatPanel*>(chat_panel_void);
+
+    auto const response_info = (ResponseInfo*)swiftnet_client_read_packet(packet_data, sizeof(ResponseInfo));
+
+    switch (response_info->request_type) {
+        case RequestType::PERIODIC_CHAT_UPDATE: chat_panel->HandlePeriodicChatUpdate(packet_data); break;
+        default: break;
+    }
+};
+
 ChatPanel::ChatPanel(const uint32_t channel_id, const uint16_t server_id, wxWindow* parent_window, const in_addr ip_address) : channel_id(channel_id), server_id(server_id), wxPanel(parent_window) {
     this->InitializeConnection(ip_address);
+
+    swiftnet_client_set_message_handler(this->GetClientConnection(), packet_handler, this);
 
     // wxWidgets
     wxBoxSizer* main_sizer = new wxBoxSizer(wxVERTICAL);
@@ -67,7 +80,7 @@ ChatPanel::ChatPanel(const uint32_t channel_id, const uint16_t server_id, wxWind
         wxString value = this->GetNewMessageInput()->GetValue();
 
         const char* message = value.c_str();
-        const uint32_t message_len = value.length();
+        const uint32_t message_len = value.length() + 1;
 
         if (message != nullptr) {
             this->GetNewMessageInput()->Clear();
@@ -162,6 +175,20 @@ void ChatPanel::InitializeConnection(const in_addr ip_address) {
     }
 
     this->client_connection = new_connection;
+}
+
+void ChatPanel::HandlePeriodicChatUpdate(struct SwiftNetClientPacketData* const packet_data) {
+    auto response = (responses::PeriodicChatUpdateResponse*)swiftnet_client_read_packet(packet_data, sizeof(responses::PeriodicChatUpdateResponse));
+
+    printf("Periodic update\nNew messages: %d\n", response->channel_messages_len);
+    
+    auto new_messages = DeserializeChannelMessages(packet_data, response->channel_messages_len);
+
+    this->channel_messages.insert(this->GetChannelMessages()->end(), new_messages->data(), new_messages->data() + new_messages->size());
+
+    this->RedrawMessages();
+
+    swiftnet_client_destroy_packet_data(packet_data, this->GetClientConnection());
 }
 
 void ChatPanel::LoadChannelData() {

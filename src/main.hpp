@@ -25,7 +25,8 @@ enum RequestType {
     SEND_MESSAGE,
     LOAD_JOINED_SERVER_DATA,
     LOAD_ADMIN_MENU_DATA,
-    CREATE_NEW_CHANNEL
+    CREATE_NEW_CHANNEL,
+    PERIODIC_CHAT_UPDATE
 };
 
 struct RequestInfo {
@@ -88,6 +89,10 @@ namespace responses {
 
     struct CreateNewChannelResponse {
 
+    };
+
+    struct PeriodicChatUpdateResponse {
+        uint32_t channel_messages_len;
     };
 }
 

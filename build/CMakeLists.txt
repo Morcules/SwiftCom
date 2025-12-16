@@ -27,6 +27,10 @@ set(LINUX_FRAMEWORKS
 
 file(GLOB_RECURSE SOURCES "../src/*.cpp")
 
+add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+add_link_options(-fsanitize=address)
+add_compile_options(-O0 -g)
+
 # Define the executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 

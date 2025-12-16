@@ -24,7 +24,7 @@ static void SerializeChannelMessages(SwiftNetPacketBuffer* buffer, std::vector<D
         swiftnet_server_append_to_packet(&message.id, sizeof(message.id), buffer);
         swiftnet_server_append_to_packet(&message.sender_id, sizeof(message.sender_id), buffer);
         swiftnet_server_append_to_packet(&new_message_len, sizeof(message.message_length), buffer);
-        swiftnet_server_append_to_packet(message.message, message.message_length + 1, buffer);
+        swiftnet_server_append_to_packet(message.message, new_message_len, buffer);
 
         printf("Serializing message: %s\n", message.message);
     }
@@ -41,18 +41,21 @@ void HostedServer::BackgroundProcesses() {
             continue;
         }
 
-        uint32_t bytes_to_allocate = sizeof(ResponseInfo) + sizeof(responses::LoadChannelDataResponse);
+        uint32_t bytes_to_allocate = sizeof(ResponseInfo) + sizeof(responses::PeriodicChatUpdateResponse);
 
         for (auto &new_message : *this->GetNewMessages()) {
             bytes_to_allocate += new_message.message_length + 1;
+            bytes_to_allocate += sizeof(new_message.message_length);
+            bytes_to_allocate += sizeof(new_message.id);
+            bytes_to_allocate += sizeof(new_message.sender_id);
         }
 
         const ResponseInfo response_info = {
-            .request_type = RequestType::LOAD_CHANNEL_DATA,
+            .request_type = RequestType::PERIODIC_CHAT_UPDATE,
             .request_status = Status::SUCCESS
         };
 
-        const responses::LoadChannelDataResponse response = {
+        const responses::PeriodicChatUpdateResponse response = {
             .channel_messages_len = static_cast<uint32_t>(this->GetNewMessages()->size())
         };
         
@@ -97,11 +100,13 @@ static void HandleLoadChannelDataRequest(HostedServer* server, SwiftNetServerPac
 
     auto channel_messages = database->SelectChannelMessages(std::nullopt, nullptr, std::nullopt, request_data->channel_id);
 
-    uint32_t bytes_to_allocate = (sizeof(responses::LoadChannelDataResponse) + sizeof(RequestInfo));
+    uint32_t bytes_to_allocate = (sizeof(responses::LoadChannelDataResponse) + sizeof(ResponseInfo));
 
     for (auto &message : *channel_messages) {
+        bytes_to_allocate += sizeof(message.id);
+        bytes_to_allocate += sizeof(message.sender_id);
+        bytes_to_allocate += sizeof(message.message_length);
         bytes_to_allocate += message.message_length + 1;
-        bytes_to_allocate += sizeof(message.id) + sizeof(message.message_length) + sizeof(message.sender_id);
     }
 
     const ResponseInfo response_info = {
@@ -310,7 +315,7 @@ static void HandleSendMessageRequest(HostedServer* server, SwiftNetServerPacketD
         
         server->GetNewMessages()->push_back(objects::Database::ChannelMessageRow{
             .message = message_clone,
-            .message_length = request->message_len,
+            .message_length = request->message_len - 1,
             .channel_id = request->channel_id,
             .sender_id = connected_user->user_id,
             .id = (uint32_t)result

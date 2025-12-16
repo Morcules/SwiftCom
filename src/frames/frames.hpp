@@ -134,6 +134,7 @@ namespace frames {
             std::vector<objects::Database::ChannelMessageRow>* GetChannelMessages();
             wxPanel* GetMessagesPanel();
             wxTextCtrl* GetNewMessageInput();
+            void HandlePeriodicChatUpdate(struct SwiftNetClientPacketData* const packet_data);
         private:
             void HandleLoadChannelDataRequest(SwiftNetClientPacketData* const packet_data);
             void RedrawMessages();

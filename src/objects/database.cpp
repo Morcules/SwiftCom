@@ -97,6 +97,9 @@ int Database::InsertHostedServerUser(const uint16_t server_id, in_addr ip_addres
     int result = sqlite3_step(stmt);
     if (result != SQLITE_DONE) {
         std::cerr << "Failed to insert hosted_server_user" << std::endl;
+        
+        sqlite3_reset(stmt);
+
         return -1;
     }
 
@@ -113,8 +116,11 @@ int Database::InsertChannelMessage(const char* message, const uint32_t channel_i
     sqlite3_bind_int(stmt, 3, sender_id);
 
     int result = sqlite3_step(stmt);
-    if (result != SQLITE_DONE) {
+    if (result != SQLITE_ROW) {
         std::cerr << "Failed to insert channel message" << std::endl;
+
+        sqlite3_reset(stmt);
+
         return -1;
     }
 
@@ -134,6 +140,9 @@ int Database::InsertJoinedServer(const uint16_t server_id, in_addr ip_address) {
     int result = sqlite3_step(stmt);
     if (result != SQLITE_DONE) {
         std::cerr << "Failed to insert insert_joined_server" << std::endl;
+
+        sqlite3_reset(stmt);
+
         return -1;
     }
 
@@ -151,6 +160,9 @@ int Database::InsertServerChatChannel(const char* name, const uint16_t server_id
     int result = sqlite3_step(stmt);
     if (result != SQLITE_DONE) {
         std::cerr << "Failed to insert insert_joined_server" << std::endl;
+
+        sqlite3_reset(stmt);
+
         return -1;
     }
 
@@ -167,6 +179,9 @@ int Database::InsertHostedServer(const uint16_t server_id) {
     int result = sqlite3_step(stmt);
     if (result != SQLITE_DONE) {
         std::cerr << "Failed to insert insert_hosted_server" << std::endl;
+
+        sqlite3_reset(stmt);
+
         return -1;
     }
 
@@ -189,6 +204,9 @@ int Database::UpdateHostedServerUsers(const char* new_username, const std::optio
     int result = sqlite3_step(stmt);
     if (result != SQLITE_DONE) {
         std::cerr << "Failed to update hosted_server_users" << std::endl;
+
+        sqlite3_reset(stmt);
+        
         return -1;
     }
 

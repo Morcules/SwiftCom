@@ -142,10 +142,10 @@ namespace objects {
 
         std::thread* background_processes_thread = nullptr;
 
-        std::vector<Database::ChannelMessageRow> new_messages;
+        std::vector<Database::ChannelMessageRow> new_messages = {};
 
         SwiftNetServer* server = nullptr;
 
-        std::vector<ConnectedUser> connected_users;
+        std::vector<ConnectedUser> connected_users = {};
     };
 }

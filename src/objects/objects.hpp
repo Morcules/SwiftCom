@@ -20,6 +20,7 @@ namespace objects {
         SwiftNetClientAddrData addr_data;
         uint16_t port;
         uint32_t user_id;
+        uint32_t channel_id;
     } ConnectedUser;
 
     class JoinedServer {

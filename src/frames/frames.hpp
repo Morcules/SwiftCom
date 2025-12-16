@@ -4,6 +4,7 @@
 #include <netinet/in.h>
 #include <wx/event.h>
 #include <wx/panel.h>
+#include <wx/scrolwin.h>
 #include <wx/sizer.h>
 #include <wx/wx.h>
 #include "../widgets/widgets.hpp"
@@ -138,6 +139,7 @@ namespace frames {
         private:
             void HandleLoadChannelDataRequest(SwiftNetClientPacketData* const packet_data);
             void RedrawMessages();
+            void OnChatUpdate(wxCommandEvent& event);
 
             SwiftNetClientConnection* client_connection;
             
@@ -145,7 +147,7 @@ namespace frames {
             uint16_t server_id;
 
             wxTextCtrl* new_message_input;
-            wxPanel* messages_panel;
+            wxScrolled<wxPanel>* messages_panel;
             wxBoxSizer* messages_sizer;
 
             std::vector<objects::Database::ChannelMessageRow> channel_messages;

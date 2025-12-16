@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <map>
 #include <optional>
 #include <pthread.h>
 #include <stdatomic.h>
@@ -30,6 +31,12 @@ static void SerializeChannelMessages(SwiftNetPacketBuffer* buffer, std::vector<D
     }
 }
 
+struct BackgroundProcessNewMessagesChannel {
+    uint32_t bytes_to_allocate;
+    SwiftNetPacketBuffer buffer;
+    std::vector<objects::Database::ChannelMessageRow> messages;
+};
+
 void HostedServer::BackgroundProcesses() {
     while (true) {
         if (atomic_load_explicit(&this->stop_background_processes, memory_order_acquire) == true) {
@@ -41,36 +48,54 @@ void HostedServer::BackgroundProcesses() {
             continue;
         }
 
-        uint32_t bytes_to_allocate = sizeof(ResponseInfo) + sizeof(responses::PeriodicChatUpdateResponse);
+        auto channel_new_messages = std::unordered_map<uint32_t, BackgroundProcessNewMessagesChannel>();
 
         for (auto &new_message : *this->GetNewMessages()) {
-            bytes_to_allocate += new_message.message_length + 1;
-            bytes_to_allocate += sizeof(new_message.message_length);
-            bytes_to_allocate += sizeof(new_message.id);
-            bytes_to_allocate += sizeof(new_message.sender_id);
+            auto it = channel_new_messages.find(new_message.channel_id);
+            if (it == channel_new_messages.end()) {
+                channel_new_messages.emplace(new_message.channel_id, (BackgroundProcessNewMessagesChannel){.bytes_to_allocate = sizeof(ResponseInfo) + sizeof(responses::PeriodicChatUpdateResponse), .messages = std::vector<objects::Database::ChannelMessageRow>()});
+                channel_new_messages.at(new_message.channel_id).messages.push_back(new_message);
+                channel_new_messages.at(new_message.channel_id).bytes_to_allocate += new_message.message_length + 1 + sizeof(new_message.message_length) + sizeof(new_message.id) + sizeof(new_message.sender_id);
+
+                continue;
+            } else {
+                it->second.bytes_to_allocate += new_message.message_length + 1 + sizeof(new_message.message_length) + sizeof(new_message.id) + sizeof(new_message.sender_id);
+                it->second.messages.push_back(new_message);
+
+                continue;
+            }
         }
 
-        const ResponseInfo response_info = {
-            .request_type = RequestType::PERIODIC_CHAT_UPDATE,
-            .request_status = Status::SUCCESS
-        };
+        for (auto& [channel_id, channel_new_message] : channel_new_messages) {
+            const ResponseInfo response_info = {
+                .request_type = RequestType::PERIODIC_CHAT_UPDATE,
+                .request_status = Status::SUCCESS
+            };
 
-        const responses::PeriodicChatUpdateResponse response = {
-            .channel_messages_len = static_cast<uint32_t>(this->GetNewMessages()->size())
-        };
-        
-        auto buffer = swiftnet_server_create_packet_buffer(bytes_to_allocate);
+            const responses::PeriodicChatUpdateResponse response = {
+                .channel_messages_len = static_cast<uint32_t>(channel_new_message.messages.size())
+            };
+            
+            channel_new_message.buffer = swiftnet_server_create_packet_buffer(channel_new_message.bytes_to_allocate);
 
-        swiftnet_server_append_to_packet(&response_info, sizeof(response_info), &buffer);
-        swiftnet_server_append_to_packet(&response, sizeof(response), &buffer);
+            swiftnet_server_append_to_packet(&response_info, sizeof(response_info), &channel_new_message.buffer);
+            swiftnet_server_append_to_packet(&response, sizeof(response), &channel_new_message.buffer);
 
-        SerializeChannelMessages(&buffer, this->GetNewMessages());
+            SerializeChannelMessages(&channel_new_message.buffer, &channel_new_message.messages);
+        }
 
         for (auto &user : *this->GetConnectedUsers()) {
-            swiftnet_server_send_packet(this->GetServer(), &buffer, user.addr_data);
+            auto it = channel_new_messages.find(user.channel_id);
+            if (it == channel_new_messages.end()) {
+                continue;
+            }
+
+            swiftnet_server_send_packet(this->GetServer(), &it->second.buffer, user.addr_data);
         }
 
-        swiftnet_server_destroy_packet_buffer(&buffer);
+        for (auto& [channel_id, channel_new_message] : channel_new_messages) {
+            swiftnet_server_destroy_packet_buffer(&channel_new_message.buffer);
+        }
 
         for (auto &new_message : *this->GetNewMessages()) {
             free((void*)new_message.message);
@@ -96,7 +121,12 @@ static void HandleLoadChannelDataRequest(HostedServer* server, SwiftNetServerPac
 
     free(query_result);
 
-    server->AddConnectedUser((ConnectedUser){.addr_data = packet_data->metadata.sender, .user_id = user.id, .port = packet_data->metadata.port_info.source_port});
+    ConnectedUser* connected_user_already = server->GetUserByIp(packet_data->metadata.sender, packet_data->metadata.port_info.source_port);
+    if (connected_user_already != nullptr) {
+        connected_user_already->channel_id = request_data->channel_id;
+    } else {
+        server->AddConnectedUser((ConnectedUser){.addr_data = packet_data->metadata.sender, .user_id = user.id, .port = packet_data->metadata.port_info.source_port, .channel_id = request_data->channel_id});
+    }
 
     auto channel_messages = database->SelectChannelMessages(std::nullopt, nullptr, std::nullopt, request_data->channel_id);
 

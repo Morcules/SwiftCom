@@ -10,6 +10,7 @@
 #include <wx/osx/stattext.h>
 #include <wx/osx/textctrl.h>
 #include <wx/panel.h>
+#include <wx/scrolwin.h>
 #include <wx/sizer.h>
 #include "../../utils/net/net.hpp"
 #include <wx/string.h>
@@ -63,7 +64,9 @@ ChatPanel::ChatPanel(const uint32_t channel_id, const uint16_t server_id, wxWind
     // wxWidgets
     wxBoxSizer* main_sizer = new wxBoxSizer(wxVERTICAL);
 
-    this->messages_panel = new wxPanel(this);
+    this->messages_panel = new wxScrolled<wxPanel>(this);
+    this->messages_panel->SetScrollRate(0, 20);
+
     this->messages_sizer = new wxBoxSizer(wxVERTICAL);
 
     this->messages_panel->SetSizer(this->messages_sizer);
@@ -97,6 +100,8 @@ ChatPanel::ChatPanel(const uint32_t channel_id, const uint16_t server_id, wxWind
 
     this->SetSizer(main_sizer);
 
+    this->Bind(wxEVT_CHAT_UPDATE, &ChatPanel::OnChatUpdate, this);
+
     this->LoadChannelData();
     this->RedrawMessages();
 }
@@ -108,12 +113,24 @@ ChatPanel::~ChatPanel() {
 void ChatPanel::RedrawMessages() {
     this->messages_sizer->Clear(true);
 
-    for (auto& message : *this->GetChannelMessages()) {
-        auto message_text = new wxStaticText(this->messages_panel, wxID_ANY, message.message);
-        message_text->SetFont(message_text->GetFont().Scale(1.8).Bold());
-        message_text->SetForegroundColour(wxColour(255, 255, 255));
+    const char* placeholder_username = "User123";
 
-        this->messages_sizer->Add(message_text, 0);
+    for (const auto& msg : *this->GetChannelMessages()) {
+        wxBoxSizer* row_sizer = new wxBoxSizer(wxHORIZONTAL);
+
+        wxStaticText* username_text = new wxStaticText(this->messages_panel, wxID_ANY, wxString::Format("%s: ", placeholder_username));
+        username_text->SetFont(username_text->GetFont().Scale(1.1f).Bold());
+        username_text->SetForegroundColour(wxColour(180, 180, 255));
+
+        wxStaticText* message_text = new wxStaticText(this->messages_panel, wxID_ANY, msg.message);
+        message_text->SetFont(message_text->GetFont().Scale(1.6f));
+        message_text->SetForegroundColour(*wxWHITE);
+        message_text->Wrap(600);
+
+        row_sizer->Add(username_text, 0, wxRIGHT | wxALIGN_CENTER_VERTICAL, 8);
+        row_sizer->Add(message_text, 1, wxALIGN_CENTER_VERTICAL);
+
+        this->messages_sizer->Add(row_sizer, 0, wxEXPAND | wxTOP | wxBOTTOM, 6);
     }
 
     Layout();
@@ -186,9 +203,14 @@ void ChatPanel::HandlePeriodicChatUpdate(struct SwiftNetClientPacketData* const 
 
     this->channel_messages.insert(this->GetChannelMessages()->end(), new_messages->data(), new_messages->data() + new_messages->size());
 
-    this->RedrawMessages();
+    auto* evt = new wxCommandEvent(wxEVT_CHAT_UPDATE);
+    wxQueueEvent(this, evt);
 
     swiftnet_client_destroy_packet_data(packet_data, this->GetClientConnection());
+}
+
+void ChatPanel::OnChatUpdate(wxCommandEvent& event) {
+    this->RedrawMessages();
 }
 
 void ChatPanel::LoadChannelData() {

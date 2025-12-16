@@ -11,6 +11,10 @@
 #define DEFAULT_TIMEOUT_REQUEST 200
 #define LOOPBACK false
 
+wxDECLARE_EVENT(wxEVT_CHAT_UPDATE, wxCommandEvent);
+
+#define EVT_CHAT_UPDATE(id, fn) wx__DECLARE_EVT1(wxEVT_CHAT_UPDATE, id, &fn)
+
 // Request Types
 
 enum Status {

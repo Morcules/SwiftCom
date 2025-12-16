@@ -7,6 +7,8 @@
 #include "swift_net.h"
 #include "main.hpp"
 
+wxDEFINE_EVENT(wxEVT_CHAT_UPDATE, wxCommandEvent);
+
 Application::Application() {
     this->database = new objects::Database();
 

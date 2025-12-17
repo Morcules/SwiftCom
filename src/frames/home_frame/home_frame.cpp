@@ -20,14 +20,14 @@ HomeFrame::HomeFrame() : wxFrame(nullptr, wxID_ANY, "Home Frame", wxDefaultPosit
     this->servers_panel = new home_frame::panels::ServersPanel(mainPanel);
 
     wxBoxSizer* vSizer = new wxBoxSizer(wxVERTICAL);
-    vSizer->Add(menu_bar, 0, wxEXPAND);
-    vSizer->Add(hosting_panel, 1, wxEXPAND);
-    vSizer->Add(servers_panel, 1, wxEXPAND);
+    vSizer->Add(menu_bar, wxSizerFlags(0).Expand());
+    vSizer->Add(hosting_panel, wxSizerFlags(1).Expand());
+    vSizer->Add(servers_panel, wxSizerFlags(1).Expand());
 
     this->hosting_panel->Hide();
     this->servers_panel->Hide();
 
-    mainPanel->SetSizer(vSizer);
+    mainPanel->SetSizerAndFit(vSizer);
 
     this->SelectedMenuChange();
 }
@@ -50,7 +50,6 @@ void HomeFrame::SelectedMenuChange() {
     this->active_panel->Show();
 
     Layout();
-    Refresh();
 }
 
 home_frame::panels::ServersPanel* HomeFrame::GetServersPanel() {

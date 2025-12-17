@@ -29,12 +29,12 @@ AdminListPanel::AdminListPanel(wxPanel* parent, const uint16_t server_id) : wxPa
     wxStaticText* member_list_text = new wxStaticText(this, wxID_ANY, "Members");
     wxStaticText* admin_list_text = new wxStaticText(this, wxID_ANY, "Admins");
 
-    mainSizer->Add(member_list_text, 0, wxTOP | wxALIGN_CENTER_HORIZONTAL, 50);
-    mainSizer->Add(this->member_list_panel, 0, wxTOP | wxALIGN_CENTER_HORIZONTAL, 5);
-    mainSizer->Add(admin_list_text, 0, wxTOP | wxALIGN_CENTER_HORIZONTAL, 50);
-    mainSizer->Add(this->admin_list_panel, 0, wxTOP | wxALIGN_CENTER_HORIZONTAL, 5);
+    mainSizer->Add(member_list_text, wxSizerFlags(0).Border(wxTOP, 50).Align(wxALIGN_CENTER_HORIZONTAL));
+    mainSizer->Add(this->member_list_panel, wxSizerFlags(0).Border(wxTOP, 5).Align(wxALIGN_CENTER_HORIZONTAL));
+    mainSizer->Add(admin_list_text, wxSizerFlags(0).Border(wxTOP, 50).Align(wxALIGN_CENTER_HORIZONTAL));
+    mainSizer->Add(this->admin_list_panel, wxSizerFlags(0).Border(wxTOP, 5).Align(wxALIGN_CENTER_HORIZONTAL));
 
-    this->SetSizer(mainSizer);
+    this->SetSizerAndFit(mainSizer);
 
     this->RenderMemberList();
     this->RenderAdminList();
@@ -52,6 +52,8 @@ void AdminListPanel::RenderAdminList() {
     auto users = wxGetApp().GetDatabase()->SelectHostedServerUsers(server_id, objects::Database::UserType::Admin, nullptr, std::nullopt);
 
     for (auto &user : *users) {
+        printf("Admin: %s\n", user.username);
+
         auto user_panel = new widgets::StyledPanel(this->admin_list_panel);
         user_panel->SetMinSize(wxSize(300, 40));
         user_panel->SetMaxSize(wxSize(300, 40));
@@ -66,17 +68,18 @@ void AdminListPanel::RenderAdminList() {
 
         auto user_panel_sizer = new wxBoxSizer(wxHORIZONTAL);
 
-        user_panel_sizer->Add(username_text, 1, wxALIGN_CENTER_VERTICAL | wxLEFT, 10);
+        user_panel_sizer->Add(username_text, wxSizerFlags(1).Border(wxLEFT, 10).Align(wxALIGN_CENTER_VERTICAL));
         user_panel_sizer->AddStretchSpacer(1);
-        user_panel_sizer->Add(make_admin_button, 1, wxALIGN_CENTER_VERTICAL);
+        user_panel_sizer->Add(make_admin_button, wxSizerFlags(1).Align(wxALIGN_CENTER_VERTICAL));
 
-        user_panel->SetSizer(user_panel_sizer);
+        user_panel->SetSizerAndFit(user_panel_sizer);
 
-        list_sizer->Add(user_panel, 1);
+        list_sizer->Add(user_panel, wxSizerFlags(1));
     }
 
-    Layout();
-    Refresh();
+    admin_list_panel->GetSizer()->Fit(admin_list_panel);
+    admin_list_panel->Layout();
+    this->Layout();
 
     delete users;
 }
@@ -103,17 +106,18 @@ void AdminListPanel::RenderMemberList() {
 
         auto user_panel_sizer = new wxBoxSizer(wxHORIZONTAL);
 
-        user_panel_sizer->Add(username_text, 1, wxALIGN_CENTER_VERTICAL | wxLEFT, 10);
+        user_panel_sizer->Add(username_text, wxSizerFlags(1).Border(wxLEFT, 10).Align(wxALIGN_CENTER_VERTICAL));
         user_panel_sizer->AddStretchSpacer(1);
-        user_panel_sizer->Add(make_member_button, 1, wxALIGN_CENTER_VERTICAL);
+        user_panel_sizer->Add(make_member_button, wxSizerFlags(1).Align(wxALIGN_CENTER_VERTICAL));
 
-        user_panel->SetSizer(user_panel_sizer);
+        user_panel->SetSizerAndFit(user_panel_sizer);
 
-        list_sizer->Add(user_panel, 1);
+        list_sizer->Add(user_panel, wxSizerFlags(1));
     }
 
-    Layout();
-    Refresh();
+    member_list_panel->GetSizer()->Fit(member_list_panel);
+    member_list_panel->Layout();
+    this->Layout();
 
     delete users;
 }

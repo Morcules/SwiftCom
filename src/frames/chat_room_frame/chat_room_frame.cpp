@@ -31,7 +31,7 @@ ChatRoomFrame::ChatRoomFrame(const in_addr ip_address, const uint16_t server_id)
 
     this->UpdateMainSizer();
 
-    main_panel->SetSizer(main_sizer);
+    main_panel->SetSizerAndFit(main_sizer);
 
     // Handle loading server
     const char* string_ip = inet_ntoa(ip_address);
@@ -69,13 +69,13 @@ ChatRoomFrame::~ChatRoomFrame() {
 void ChatRoomFrame::UpdateMainSizer() {
     main_sizer->Clear(false);
 
-    main_sizer->Add(this->channel_list_panel, 0, wxEXPAND);
+    main_sizer->Add(this->channel_list_panel, wxSizerFlags(0).Expand());
     if (this->chat_panel != nullptr) {
-        main_sizer->Add(this->chat_panel, 1, wxEXPAND);
+        main_sizer->Add(this->chat_panel, wxSizerFlags(1).Expand());
     }
 
+    main_panel->Layout();
     Layout();
-    Refresh();
 }
 
 void ChatRoomFrame::DrawChannels() {
@@ -98,14 +98,12 @@ void ChatRoomFrame::DrawChannels() {
         channel_button->SetMinSize(wxSize(-1, 30));
         channel_button->SetMaxSize(wxSize(-1, 30));
 
-        list_sizer->Add(channel_button, 0, wxEXPAND);
+        list_sizer->Add(channel_button, wxSizerFlags(0).Expand());
     }
 
+    this->channel_list_panel->SetMinSize(wxSize(200, -1));
     this->channel_list_panel->SetSizer(list_sizer);
-
     this->channel_list_panel->Layout();
-    this->channel_list_panel->Refresh();
-    this->channel_list_panel->SendSizeEvent();
 }
 
 void ChatRoomFrame::HandleLoadServerInfoResponse(SwiftNetClientPacketData* const packet_data) {

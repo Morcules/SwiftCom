@@ -58,15 +58,15 @@ HostingPanel::HostingPanel(wxPanel* parent_panel) : wxPanel(parent_panel) {
     manage_all_servers_sizer->Add(start_all_servers_button, 1, wxEXPAND);
     manage_all_servers_sizer->Add(stop_all_servers_button, 1, wxEXPAND);
 
-    main_sizer->Add(this->hosted_servers_panel, 0, wxTOP | wxBOTTOM | wxEXPAND, 10);
-    main_sizer->Add(manage_all_servers_sizer, 0, wxBOTTOM | wxEXPAND, 10);
-    main_sizer->Add(create_new_server_button, 0, wxTOP | wxBOTTOM | wxEXPAND, 10);
+    main_sizer->Add(this->hosted_servers_panel, wxSizerFlags(0).Expand().Border(wxTOP | wxBOTTOM, 10));
+    main_sizer->Add(manage_all_servers_sizer, wxSizerFlags(0).Expand().Border(wxBOTTOM, 10));
+    main_sizer->Add(create_new_server_button, wxSizerFlags(0).Expand().Border(wxTOP | wxBOTTOM, 10));
 
-    main_sizer_margin->AddStretchSpacer(2);
-    main_sizer_margin->Add(main_sizer, 10, wxEXPAND);
-    main_sizer_margin->AddStretchSpacer(2);
+    main_sizer_margin->AddStretchSpacer();
+    main_sizer_margin->Add(main_sizer, wxSizerFlags(1).Expand());
+    main_sizer_margin->AddStretchSpacer();
 
-    this->SetSizer(main_sizer_margin);
+    this->SetSizerAndFit(main_sizer_margin);
 
     // Load hosted servers
     std::vector<objects::Database::HostedServerRow>* hosted_servers = wxGetApp().GetDatabase()->SelectHostedServers(std::nullopt);
@@ -126,18 +126,17 @@ void HostingPanel::DrawServers() {
 
         wxStaticText* button_invitation_code_text = new wxStaticText(server_panel, wxID_ANY, invitation_code);
 
-        button_sizer->Add(button_invitation_code_text, 4, wxALIGN_CENTER_VERTICAL | wxLEFT, 10);
+        button_sizer->Add(button_invitation_code_text, wxSizerFlags(4).Align(wxALIGN_CENTER_VERTICAL).Border(wxLEFT, 10));
         button_sizer->AddStretchSpacer(1);
-        button_sizer->Add(settings_server_button, 4, wxALIGN_CENTER_VERTICAL);
-        button_sizer->Add(start_server_button, 4, wxALIGN_CENTER_VERTICAL);
+        button_sizer->Add(settings_server_button, wxSizerFlags(4).Align(wxALIGN_CENTER_VERTICAL));
+        button_sizer->Add(start_server_button, wxSizerFlags(4).Align(wxALIGN_CENTER_VERTICAL));
 
-        server_panel->SetSizer(button_sizer);
+        server_panel->SetSizerAndFit(button_sizer);
 
-        v_sizer->Add(server_panel, 4, wxEXPAND | wxTOP | wxBOTTOM, 5);
+        v_sizer->Add(server_panel, wxSizerFlags(4).Expand().Border(wxTOP | wxBOTTOM, 5));
     }
 
     this->hosted_servers_panel->GetParent()->Layout();
-    this->hosted_servers_panel->GetParent()->Refresh();
 }
 
 void HostingPanel::CreateNewServer(wxMouseEvent&) {

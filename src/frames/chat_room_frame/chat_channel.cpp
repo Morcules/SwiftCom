@@ -10,9 +10,7 @@ ChatRoomFrame::ChatChannel::ChatChannel(const uint32_t id, char name[20]) : id(i
     strncpy(this->name, name, sizeof(this->name));
 }
 
-ChatRoomFrame::ChatChannel::~ChatChannel() {
-
-}
+ChatRoomFrame::ChatChannel::~ChatChannel() = default;
 
 uint32_t ChatRoomFrame::ChatChannel::GetId() {
     return this->id;

@@ -24,12 +24,12 @@ static std::vector<objects::Database::ChannelMessageRow>* DeserializeChannelMess
     auto result = new std::vector<objects::Database::ChannelMessageRow>();
 
     for (uint32_t i = 0; i < channel_messages_len; i++) {
-        const uint32_t* message_id = (uint32_t*)swiftnet_client_read_packet(packet_data, sizeof(uint32_t));
-        const uint32_t* sender_id = (uint32_t*)swiftnet_client_read_packet(packet_data, sizeof(uint32_t));
-        const uint32_t* message_length = (uint32_t*)swiftnet_client_read_packet(packet_data, sizeof(uint32_t));
-        const char* message = (const char*)swiftnet_client_read_packet(packet_data, *message_length);
+        const uint32_t* const message_id = (uint32_t*)swiftnet_client_read_packet(packet_data, sizeof(uint32_t));
+        const uint32_t* const sender_id = (uint32_t*)swiftnet_client_read_packet(packet_data, sizeof(uint32_t));
+        const uint32_t* const message_length = (uint32_t*)swiftnet_client_read_packet(packet_data, sizeof(uint32_t));
+        const char* const message = (const char*)swiftnet_client_read_packet(packet_data, *message_length);
 
-        char* message_copy = (char*)malloc(*message_length);
+        char* const message_copy = (char*)malloc(*message_length);
         strncpy(message_copy, message, *message_length);
 
         printf("Received message: %s\n", message_copy);
@@ -95,10 +95,10 @@ ChatPanel::ChatPanel(const uint32_t channel_id, const uint16_t server_id, wxWind
     this->GetNewMessageInput()->SetMinSize(wxSize(-1, 50));
     this->GetNewMessageInput()->SetMaxSize(wxSize(-1, 50));
 
-    main_sizer->Add(this->GetMessagesPanel(), 1, wxEXPAND);
-    main_sizer->Add(this->GetNewMessageInput(), 0, wxEXPAND);
+    main_sizer->Add(this->GetMessagesPanel(), wxSizerFlags(1).Expand());
+    main_sizer->Add(this->GetNewMessageInput(), wxSizerFlags(0).Expand());
 
-    this->SetSizer(main_sizer);
+    this->SetSizerAndFit(main_sizer);
 
     this->Bind(wxEVT_CHAT_UPDATE, &ChatPanel::OnChatUpdate, this);
 
@@ -127,10 +127,10 @@ void ChatPanel::RedrawMessages() {
         message_text->SetForegroundColour(*wxWHITE);
         message_text->Wrap(600);
 
-        row_sizer->Add(username_text, 0, wxRIGHT | wxALIGN_CENTER_VERTICAL, 8);
-        row_sizer->Add(message_text, 1, wxALIGN_CENTER_VERTICAL);
+        row_sizer->Add(username_text, wxSizerFlags(0).Border(wxRIGHT, 8).Align(wxALIGN_CENTER_VERTICAL));
+        row_sizer->Add(message_text, wxSizerFlags(1).Align(wxALIGN_CENTER_VERTICAL));
 
-        this->messages_sizer->Add(row_sizer, 0, wxEXPAND | wxTOP | wxBOTTOM, 6);
+        this->messages_sizer->Add(row_sizer, wxSizerFlags(0).Expand().Border(wxTOP | wxBOTTOM, 6));
     }
 
     Layout();

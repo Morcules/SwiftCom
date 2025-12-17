@@ -35,14 +35,14 @@ ServersPanel::ServersPanel(wxPanel* parent_panel) : wxPanel(parent_panel) {
     wxBoxSizer* main_vert_sizer = new wxBoxSizer(wxVERTICAL);
     wxBoxSizer* main_sizer_margin = new wxBoxSizer(wxHORIZONTAL);
 
-    main_vert_sizer->Add(this->joined_servers_panel, 4, wxTOP | wxBOTTOM | wxEXPAND, 10);
-    main_vert_sizer->Add(add_server_button, 4, wxTOP | wxBOTTOM | wxEXPAND, 10);
+    main_vert_sizer->Add(this->joined_servers_panel, wxSizerFlags(4).Expand().Border(wxTOP | wxBOTTOM, 10));
+    main_vert_sizer->Add(add_server_button, wxSizerFlags(4).Expand().Border(wxTOP | wxBOTTOM, 10));
 
-    main_sizer_margin->AddStretchSpacer(2);
-    main_sizer_margin->Add(main_vert_sizer, 10, wxEXPAND);
-    main_sizer_margin->AddStretchSpacer(2);
+    main_sizer_margin->AddStretchSpacer(1);
+    main_sizer_margin->Add(main_vert_sizer, wxSizerFlags(5).Expand());
+    main_sizer_margin->AddStretchSpacer(1);
 
-    this->SetSizer(main_sizer_margin);
+    this->SetSizerAndFit(main_sizer_margin);
 
     this->RefreshServerInfo();
 
@@ -53,9 +53,7 @@ ServersPanel::ServersPanel(wxPanel* parent_panel) : wxPanel(parent_panel) {
     Bind(wxEVT_TIMER, [this](wxTimerEvent& event){this->RefreshServerInfo(); this->DrawServers();}, wxID_ANY);
 }
 
-ServersPanel::~ServersPanel() {
-
-}
+ServersPanel::~ServersPanel() = default;
 
 void ServersPanel::RefreshServerInfo() {
     // Load joined servers
@@ -159,8 +157,8 @@ void ServersPanel::DrawServers() {
         wxStaticText* joined_server_text = new wxStaticText(server_panel, wxID_ANY, wxString(joined_server_text_string));
 
 
-        button_sizer->Add(status, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 5);
-        button_sizer->Add(joined_server_text, 4, wxALIGN_CENTER_VERTICAL | wxLEFT, 2);
+        button_sizer->Add(status, wxSizerFlags(0).Align(wxALIGN_CENTER_VERTICAL).Border(wxLEFT, 5));
+        button_sizer->Add(joined_server_text, wxSizerFlags(4).Align(wxALIGN_CENTER_VERTICAL).Border(wxLEFT, 2));
         button_sizer->AddStretchSpacer(1);
 
         if (server.IsAdmin()) {
@@ -171,19 +169,17 @@ void ServersPanel::DrawServers() {
             admin_button->SetMinSize(wxSize(-1, 30));
             admin_button->SetMaxSize(wxSize(-1, 30));
 
-            button_sizer->Add(admin_button, 4, wxALIGN_CENTER_VERTICAL);
+            button_sizer->Add(admin_button, wxSizerFlags(4).Align(wxALIGN_CENTER_VERTICAL));
         }
 
-        button_sizer->Add(start_server_button, 4, wxALIGN_CENTER_VERTICAL);
+        button_sizer->Add(start_server_button, wxSizerFlags(4).Align(wxALIGN_CENTER_VERTICAL));
 
-        server_panel->SetSizer(button_sizer);
+        server_panel->SetSizerAndFit(button_sizer);
 
-        v_sizer->Add(server_panel, 4, wxTOP | wxBOTTOM | wxEXPAND, 5);
+        v_sizer->Add(server_panel, wxSizerFlags(4).Border(wxTOP | wxBOTTOM, 5).Expand());
     }
 
     this->joined_servers_panel->GetParent()->Layout();
-    this->joined_servers_panel->GetParent()->Refresh();
-    this->joined_servers_panel->GetParent()->SendSizeEvent();
 }
 
 void ServersPanel::OpenAddServerPopupMenu(wxMouseEvent& event, wxWindow* parent) {

@@ -17,9 +17,7 @@ using Channels = frames::AdminMenuFrame::Channels;
 BEGIN_EVENT_TABLE(Channels, wxPanel)
 END_EVENT_TABLE()
 
-Channels::Channels(wxWindow* parent, SwiftNetClientConnection* client_connection)
-    : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxNO_BORDER)
-{
+Channels::Channels(wxWindow* parent, SwiftNetClientConnection* client_connection) : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxNO_BORDER) {
     if (client_connection == nullptr) {
         return;
     }
@@ -31,21 +29,21 @@ Channels::Channels(wxWindow* parent, SwiftNetClientConnection* client_connection
     auto* title = new wxStaticText(this, wxID_ANY, "Channels");
     title->SetFont(title->GetFont().Scale(1.8).Bold());
     title->SetForegroundColour(wxColour(255, 255, 255));
-    mainSizer->Add(title, 0, wxLEFT | wxTOP | wxRIGHT, 20);
+    mainSizer->Add(title, wxSizerFlags(0).Border(wxLEFT | wxTOP | wxRIGHT, 20));
 
     scrollPanel = new wxScrolled<wxPanel>(this);
     scrollPanel->SetScrollRate(0, 20);
     scrollPanel->SetBackgroundColour(wxColour(30, 30, 36));
 
     channelsSizer = new wxBoxSizer(wxVERTICAL);
-    scrollPanel->SetSizer(channelsSizer);
+    scrollPanel->SetSizerAndFit(channelsSizer);
 
-    this->LoadChannels();
-    this->DrawChannelList();
+    LoadChannels();
+    DrawChannelList();
 
-    mainSizer->Add(scrollPanel, 1, wxEXPAND | wxALL, 15);
+    mainSizer->Add(scrollPanel, wxSizerFlags(1).Expand().Border(wxALL, 15));
 
-    SetSizer(mainSizer);
+    SetSizerAndFit(mainSizer);
 
     auto* addButton = new widgets::Button(this, "+", [this](wxMouseEvent& evt) {
         OnAddChannel(evt);
@@ -58,20 +56,19 @@ Channels::Channels(wxWindow* parent, SwiftNetClientConnection* client_connection
 
     auto* floatingSizer = new wxBoxSizer(wxVERTICAL);
     floatingSizer->AddStretchSpacer();
-    floatingSizer->Add(addButton, 0, wxALL, 20);
+    floatingSizer->Add(addButton, wxSizerFlags(0).Border(wxALL, 20));
 
     auto* horizontalSizer = new wxBoxSizer(wxHORIZONTAL);
     horizontalSizer->AddStretchSpacer();
-    horizontalSizer->Add(floatingSizer, 0, wxALIGN_BOTTOM);
+    horizontalSizer->Add(floatingSizer, wxSizerFlags(0).Align(wxALIGN_BOTTOM));
 
-    mainSizer->Add(horizontalSizer, 0, wxEXPAND);
+    mainSizer->Add(horizontalSizer, wxSizerFlags(0).Expand());
 }
 
 Channels::~Channels() = default;
 
-void Channels::LoadChannels() 
-{
-    this->chat_channels.clear();
+void Channels::LoadChannels()  {
+    chat_channels.clear();
 
     const RequestInfo request_info = {
         .request_type = RequestType::LOAD_ADMIN_MENU_DATA
@@ -85,7 +82,7 @@ void Channels::LoadChannels()
     swiftnet_client_append_to_packet(&request_info, sizeof(request_info), &buffer);
     swiftnet_client_append_to_packet(&request, sizeof(request), &buffer);
 
-    auto response_packet_data = swiftnet_client_make_request(this->client_connection, &buffer, DEFAULT_TIMEOUT_REQUEST);
+    auto response_packet_data = swiftnet_client_make_request(client_connection, &buffer, DEFAULT_TIMEOUT_REQUEST);
 
     swiftnet_client_destroy_packet_buffer(&buffer);
 
@@ -99,17 +96,17 @@ void Channels::LoadChannels()
     for (uint32_t i = 0; i < response->channels_size; i++) {
         auto row_ptr = (objects::Database::ServerChatChannelRow*)swiftnet_client_read_packet(response_packet_data, sizeof(objects::Database::ServerChatChannelRow));
 
-        this->chat_channels.push_back(*row_ptr);
+        chat_channels.push_back(*row_ptr);
     }
 
-    swiftnet_client_destroy_packet_data(response_packet_data, this->client_connection);
+    swiftnet_client_destroy_packet_data(response_packet_data, client_connection);
 }
 
 void Channels::DrawChannelList()
 {
     channelsSizer->Clear(true);
 
-    for (auto& chat_channel : this->chat_channels) {
+    for (auto& chat_channel : chat_channels) {
         auto channelPanel = new widgets::StyledPanel(scrollPanel);
         channelPanel->SetMinSize(wxSize(-1, 60));
 
@@ -144,7 +141,7 @@ int Channels::CreateNewTextChannel(const char* name) {
     swiftnet_client_append_to_packet(&request_info, sizeof(request_info), &buffer);
     swiftnet_client_append_to_packet(&request, sizeof(request), &buffer);
 
-    auto response_packet_data = swiftnet_client_make_request(this->client_connection, &buffer, DEFAULT_TIMEOUT_REQUEST);
+    auto response_packet_data = swiftnet_client_make_request(client_connection, &buffer, DEFAULT_TIMEOUT_REQUEST);
 
     swiftnet_client_destroy_packet_buffer(&buffer);
     
@@ -156,12 +153,12 @@ int Channels::CreateNewTextChannel(const char* name) {
     auto response = (responses::CreateNewChannelResponse*)swiftnet_client_read_packet(response_packet_data, sizeof(responses::CreateNewChannelResponse));
 
     if (response_info->request_status != Status::SUCCESS) {
-        swiftnet_client_destroy_packet_data(response_packet_data, this->client_connection);
+        swiftnet_client_destroy_packet_data(response_packet_data, client_connection);
         
         return -1;
     }
 
-    swiftnet_client_destroy_packet_data(response_packet_data, this->client_connection);
+    swiftnet_client_destroy_packet_data(response_packet_data, client_connection);
 
     return 0;
 }
@@ -170,19 +167,19 @@ void Channels::OnAddChannel(wxMouseEvent&)
 {
     auto dialog = new wxDialog(this, wxID_ANY, "Create New Channel", wxDefaultPosition, wxSize(400, 200));
 
-    auto* sizer = new wxBoxSizer(wxVERTICAL);
+    auto sizer = new wxBoxSizer(wxVERTICAL);
 
-    auto* nameLabel = new wxStaticText(dialog, wxID_ANY, "Channel Name");
+    auto nameLabel = new wxStaticText(dialog, wxID_ANY, "Channel Name");
     nameLabel->SetForegroundColour(*wxWHITE);
-    sizer->Add(nameLabel, 0, wxALL, 15);
+    sizer->Add(nameLabel, wxSizerFlags(0).Border(wxALL, 15));
 
-    auto* nameInput = new wxTextCtrl(dialog, wxID_ANY, "", wxDefaultPosition, wxSize(360, 40));
+    auto nameInput = new wxTextCtrl(dialog, wxID_ANY, "", wxDefaultPosition, wxSize(360, 40));
     nameInput->SetBackgroundColour(wxColour(50, 50, 60));
     nameInput->SetForegroundColour(*wxWHITE);
     nameInput->SetHint("New Channel Name");
     nameInput->SetFont(nameInput->GetFont().Scale(1.1));
 
-    sizer->Add(nameInput, 0, wxALL + wxEXPAND, 12);
+    sizer->Add(nameInput, wxSizerFlags(0).Expand().Border(wxALL, 12));
 
     auto buttonSizer = new wxBoxSizer(wxHORIZONTAL);
 
@@ -196,13 +193,13 @@ void Channels::OnAddChannel(wxMouseEvent&)
     });
     createBtn->SetMinSize(wxSize(140, 45));
 
-    buttonSizer->Add(cancelBtn, 0);
+    buttonSizer->Add(cancelBtn, wxSizerFlags(0));
     buttonSizer->AddStretchSpacer();
-    buttonSizer->Add(createBtn, 0);
+    buttonSizer->Add(createBtn, wxSizerFlags(0));
 
-    sizer->Add(buttonSizer, 1, wxALL | wxEXPAND, 12);
+    sizer->Add(buttonSizer, wxSizerFlags(1).Border(wxALL, 12).Expand());
 
-    dialog->SetSizer(sizer);
+    dialog->SetSizerAndFit(sizer);
     dialog->Centre();
 
     if (dialog->ShowModal() == wxID_OK) {
@@ -213,13 +210,13 @@ void Channels::OnAddChannel(wxMouseEvent&)
         }
 
         if (!newName.IsEmpty()) {
-            int result = this->CreateNewTextChannel(newName.c_str());
+            int result = CreateNewTextChannel(newName.c_str());
             if (result != 0) {
                 return;
             }
             
-            this->LoadChannels();
-            this->DrawChannelList();
+            LoadChannels();
+            DrawChannelList();
         }
     }
 }

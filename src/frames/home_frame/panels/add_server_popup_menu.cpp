@@ -18,35 +18,35 @@ AddServerPopupMenu::AddServerPopupMenu(wxWindow* parent, wxPoint pos) : wxDialog
     auto* title = new wxStaticText(this, wxID_ANY, "Join a Server");
     title->SetFont(title->GetFont().Scale(1.8).Bold());
     title->SetForegroundColour(wxColour(255, 255, 255));
-    mainSizer->Add(title, 0, wxALIGN_CENTER | wxTOP | wxLEFT | wxRIGHT, 25);
+    mainSizer->Add(title, wxSizerFlags(0).Align(wxALIGN_CENTER).Border(wxTOP | wxLEFT | wxRIGHT, 25));
 
     auto* helpText = new wxStaticText(this, wxID_ANY, "Enter the server code and your username to join.");
     helpText->SetForegroundColour(wxColour(180, 180, 190));
-    mainSizer->Add(helpText, 0, wxALIGN_CENTER | wxLEFT | wxRIGHT | wxBOTTOM, 20);
+    mainSizer->Add(helpText, wxSizerFlags(0).Align(wxALIGN_CENTER).Border(wxLEFT | wxRIGHT | wxBOTTOM, 20));
 
     auto* codeLabel = new wxStaticText(this, wxID_ANY, "Server Code");
     codeLabel->SetForegroundColour(wxColour(220, 220, 220));
     codeLabel->SetFont(codeLabel->GetFont().Bold());
-    mainSizer->Add(codeLabel, 0, wxLEFT | wxTOP, 20);
+    mainSizer->Add(codeLabel, wxSizerFlags(0).Border(wxLEFT | wxTOP, 20));
 
     auto* serverCodeInput = new wxTextCtrl(this, wxID_ANY, "", wxDefaultPosition, wxSize(360, 40));
     serverCodeInput->SetBackgroundColour(wxColour(50, 50, 60));
     serverCodeInput->SetForegroundColour(*wxWHITE);
-    serverCodeInput->SetHint("e.g. ABCDE-12345-FGHIJ");
+    serverCodeInput->SetHint("e.g. ABCDE12345");
     serverCodeInput->SetFont(serverCodeInput->GetFont().Scale(1.1));
-    mainSizer->Add(serverCodeInput, 0, wxALL | wxEXPAND, 12);
+    mainSizer->Add(serverCodeInput, wxSizerFlags(0).Expand().Border(wxALL, 12));
 
     auto* userLabel = new wxStaticText(this, wxID_ANY, "Username");
     userLabel->SetForegroundColour(wxColour(220, 220, 220));
     userLabel->SetFont(userLabel->GetFont().Bold());
-    mainSizer->Add(userLabel, 0, wxLEFT, 20);
+    mainSizer->Add(userLabel, wxSizerFlags(0).Border(wxLEFT, 20));
 
     auto* usernameInput = new wxTextCtrl(this, wxID_ANY, "", wxDefaultPosition, wxSize(360, 40));
     usernameInput->SetBackgroundColour(wxColour(50, 50, 60));
     usernameInput->SetForegroundColour(*wxWHITE);
     usernameInput->SetHint("Your display name");
     usernameInput->SetFont(usernameInput->GetFont().Scale(1.1));
-    mainSizer->Add(usernameInput, 0, wxALL | wxEXPAND, 12);
+    mainSizer->Add(usernameInput, wxSizerFlags(0).Border(wxALL, 12).Expand());
 
     auto* buttonSizer = new wxBoxSizer(wxHORIZONTAL);
 
@@ -85,11 +85,11 @@ AddServerPopupMenu::AddServerPopupMenu(wxWindow* parent, wxPoint pos) : wxDialog
     addBtn->SetFont(addBtn->GetFont().Bold().Scale(1.1));
     addBtn->SetMinSize(wxSize(140, 45));
 
-    buttonSizer->Add(cancelBtn, 0);
+    buttonSizer->Add(cancelBtn, wxSizerFlags(0));
     buttonSizer->AddStretchSpacer();
-    buttonSizer->Add(addBtn, 0);
+    buttonSizer->Add(addBtn, wxSizerFlags(0));
 
-    mainSizer->Add(buttonSizer, 1, wxALL | wxEXPAND, 10);
+    mainSizer->Add(buttonSizer, wxSizerFlags(1).Border(wxALL, 10).Expand());
 
     SetSizerAndFit(mainSizer);
     CentreOnParent();
@@ -99,8 +99,7 @@ AddServerPopupMenu::AddServerPopupMenu(wxWindow* parent, wxPoint pos) : wxDialog
 
 AddServerPopupMenu::~AddServerPopupMenu() = default;
 
-AddServerPopupMenu::RequestServerExistationStatus AddServerPopupMenu::RequestServerExistsConfirmation(const char* ip_address, uint16_t server_id, const in_addr address, const char* username)
-{
+AddServerPopupMenu::RequestServerExistationStatus AddServerPopupMenu::RequestServerExistsConfirmation(const char* ip_address, uint16_t server_id, const in_addr address, const char* username) {
     SwiftNetClientConnection* client = nullptr;
 
     // Connect to local private IP if this is our own public IP
@@ -155,8 +154,7 @@ AddServerPopupMenu::RequestServerExistationStatus AddServerPopupMenu::RequestSer
     return SUCCESSFULLY_CONNECTED;
 }
 
-AddServerPopupMenu::AddServerReturnCode AddServerPopupMenu::AddServer(wxString server_code_input, wxString username_input)
-{
+AddServerPopupMenu::AddServerReturnCode AddServerPopupMenu::AddServer(wxString server_code_input, wxString username_input) {
     std::vector<uint8_t> decoded = utils::crypto::base32_decode(server_code_input.ToStdString());
 
     if (decoded.size() < sizeof(in_addr) + sizeof(uint16_t)) {

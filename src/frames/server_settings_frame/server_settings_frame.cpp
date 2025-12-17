@@ -20,14 +20,14 @@ ServerSettingsFrame::ServerSettingsFrame(const uint16_t server_id, const in_addr
 
     this->admin_list_panel = new ServerSettingsFrame::AdminListPanel(main_panel, server_id);
 
-    main_sizer->Add(this->menu_bar, 0, wxEXPAND);
-    main_sizer->Add(this->admin_list_panel, 1, wxEXPAND);
+    main_sizer->Add(this->menu_bar, wxSizerFlags(0).Expand());
+    main_sizer->Add(this->admin_list_panel, wxSizerFlags(1).Expand());
 
     this->admin_list_panel->Hide();
 
     this->SelectedMenuChange();
 
-    main_panel->SetSizer(main_sizer);
+    main_panel->SetSizerAndFit(main_sizer);
 }
 
 ServerSettingsFrame::~ServerSettingsFrame() {
@@ -54,6 +54,5 @@ void ServerSettingsFrame::SelectedMenuChange() {
 
     this->active_menu->Show();
 
-    Refresh();
     Layout();
 }

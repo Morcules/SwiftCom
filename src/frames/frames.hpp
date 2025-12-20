@@ -128,6 +128,7 @@ namespace frames {
             void LoadChannelData();
 
             void SendMessage(const char* message, const uint32_t message_len);
+            void OnScrollChange(wxScrollWinEvent& evt);
 
             uint16_t GetServerId();
             uint32_t GetChannelId();
@@ -149,6 +150,8 @@ namespace frames {
             wxTextCtrl* new_message_input;
             wxScrolled<wxPanel>* messages_panel;
             wxBoxSizer* messages_sizer;
+
+            bool messages_panel_bottom = true;
 
             std::vector<objects::Database::ChannelMessageRow> channel_messages;
         };

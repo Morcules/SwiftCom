@@ -72,6 +72,15 @@ ChatPanel::ChatPanel(const uint32_t channel_id, const uint16_t server_id, wxWind
 
     this->messages_panel = new wxScrolled<wxPanel>(this);
     this->messages_panel->SetScrollRate(0, 20);
+    this->messages_panel->Bind(wxEVT_SCROLLWIN_LINEUP, [this](wxScrollWinEvent& evt) {
+        this->OnScrollChange(evt);
+    });
+    this->messages_panel->Bind(wxEVT_SCROLLWIN_LINEDOWN, [this](wxScrollWinEvent& evt) {
+        this->OnScrollChange(evt);
+    });
+    this->messages_panel->Bind(wxEVT_SCROLLWIN_THUMBRELEASE, [this](wxScrollWinEvent& evt) {
+        this->OnScrollChange(evt);
+    });
 
     this->messages_sizer = new wxBoxSizer(wxVERTICAL);
 
@@ -117,6 +126,8 @@ ChatPanel::~ChatPanel() {
 }
 
 void ChatPanel::RedrawMessages() {
+    this->messages_panel->Freeze();
+
     this->messages_sizer->Clear(true);
 
     for (const auto& msg : *this->GetChannelMessages()) {
@@ -137,8 +148,20 @@ void ChatPanel::RedrawMessages() {
         this->messages_sizer->Add(row_sizer, wxSizerFlags(0).Expand().Border(wxTOP | wxBOTTOM, 6));
     }
 
-    Layout();
-    Refresh();
+    this->messages_sizer->Layout();
+    this->messages_panel->FitInside();
+
+    if (this->messages_panel_bottom) {
+        printf("Scrolling auto\n");
+
+        int maxPos = this->messages_panel->GetScrollRange(wxVERTICAL) - this->messages_panel->GetScrollThumb(wxVERTICAL);
+
+        this->messages_panel->Scroll(-1, maxPos);
+    }
+
+    this->messages_panel->Thaw();
+
+    this->Layout();
 }
 
 void ChatPanel::HandleLoadChannelDataRequest(SwiftNetClientPacketData* const packet_data) {
@@ -162,6 +185,20 @@ void ChatPanel::HandleLoadChannelDataRequest(SwiftNetClientPacketData* const pac
     auto channel_messages = DeserializeChannelMessages(packet_data, response->channel_messages_len);
 
     *(this->GetChannelMessages()) = *channel_messages;
+}
+
+void ChatPanel::OnScrollChange(wxScrollWinEvent& evt) {
+    int currentPos = this->messages_panel->GetScrollPos(wxVERTICAL);
+
+    int maxPos = this->messages_panel->GetScrollRange(wxVERTICAL) - this->messages_panel->GetScrollThumb(wxVERTICAL);
+
+    printf("Current Pos: %d\nMax Pos: %d\n", currentPos, maxPos);
+
+    bool bottom = (currentPos + 1) >= maxPos;
+
+    this->messages_panel_bottom = bottom;
+
+    evt.Skip();
 }
 
 void ChatPanel::SendMessage(const char* message, const uint32_t message_len) {

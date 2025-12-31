@@ -2,7 +2,7 @@
 
 ## **A decentralized communication application where you host servers directly on your computer. No central server controls your data.**
 
-## SwiftCom is built on my custom **[SwiftNet networking library](https://github.com/Morcules/SwiftCom)** for full control over performance, usability, and privacy. The GUI is powered by **wxWidgets** for cross-platform support.
+## SwiftCom is built on my custom **[SwiftNet networking library](https://github.com/Morcules/SwiftNet)** for full control over performance, usability, and privacy. The GUI is powered by **wxWidgets** for cross-platform support.
 
 ## Any contributions or help are very welcome! 🚀
 
